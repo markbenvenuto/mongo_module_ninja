@@ -96,6 +96,7 @@ class NinjaFile(object):
         self.built_targets = set()
         self.generated_headers = set()
         self.rc_files = []
+        self.strip_link_debug_flag = False
 
         self.find_build_nodes()
         self.find_aliases()
@@ -542,6 +543,8 @@ class NinjaFile(object):
 
         myVars = {}
 
+        debug_and_fastlink_conflict = False
+
         for word in shlex.split(cmd, posix=myEnv.TargetOSIs('posix')):
             if not word.startswith('$'): continue
             if word in ('$in', '$out'): continue
@@ -563,14 +566,34 @@ class NinjaFile(object):
 
             if name in ('_LIBFLAGS', '_PDB', '_MSVC_OUTPUT_FLAG'):
                 # These are never worth commoning since they are always different.
+                if self.strip_link_debug_flag:
+                    mySubst = mySubst.replace('/DEBUG', '')
+                elif "/DEBUG" in mySubst:
+                    debug_and_fastlink_conflict = True
+
                 myVars[name] = mySubst
                 continue
 
             if name not in self.vars:
-                self.vars[name] = self.globalEnv.subst(word)
+                var_value = self.globalEnv.subst(word)
+
+                if "/DEBUG" in var_value and "/DEBUG:FASTLINK" in var_value:
+                    assert not debug_and_fastlink_conflict 
+                    var_value = var_value.replace('/DEBUG ', '')
+                    self.strip_link_debug_flag = True
+                    
+
+                self.vars[name] = var_value
+
             if mySubst != self.vars[name]:
                 if mySubst.startswith(self.vars[name]):
                     mySubst = '${%s}%s'%(name, mySubst[len(self.vars[name]):])
+
+                if "/DEBUG" in mySubst and "/DEBUG:FASTLINK" in mySubst:
+                    assert not debug_and_fastlink_conflict 
+                    mySubst = mySubst.replace('/DEBUG ', '')
+                    self.strip_link_debug_flag = True
+
                 over = self.overrides.setdefault(name, {})
                 num = over.setdefault(mySubst, len(over))
                 myVars[name] = '$%s_%s'%(name, num)
