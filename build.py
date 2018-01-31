@@ -136,7 +136,8 @@ class NinjaFile(object):
         using_ccache = bool(self.globalEnv.get('_NINJA_CCACHE', ''))
         assert not using_ccache # XXX TODO
         pch_dir = ospath('build/%s/mongo/'%self.globalEnv.subst('$VARIANT_DIR'))
-        pch_tool = 'SHCXX' if 'SHCXX' in self.tool_commands else 'CXX'
+        # Prefer CXX on MSVC since MSVC always has a SHCXX due to the MSI custom action dll.
+        pch_tool = 'SHCXX' if 'SHCXX' in self.tool_commands and not self.globalEnv.ToolchainIs('msvc') else 'CXX'
         pchvars = {}
 
         for build in self.builds:
