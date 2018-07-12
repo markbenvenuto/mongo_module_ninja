@@ -208,17 +208,27 @@ class NinjaFile(object):
         ]
         compile_flags = []
 
-        if self.globalEnv.ToolchainIs('clang'):
+        if self.globalEnv.TargetOSIs("darwin") or True:
+            version_file = 'build/a91375a9328f2a515182caf1be3e2f2c.tar.gz'
+            if not os.path.exists(version_file):
+                print "*** ERROR: Missing clang toolchain tarball at '%s'." % (version_file)
+                print "*** ccache is used automatically if it is installed."
+                Exit(1)
+
+            env_flags = [
+                'ICECC_VERSION=x86_64:%s' % (version_file),
+                'CCACHE_PREFIX=' + self.globalEnv['_NINJA_ICECC'],
+            ]
             if self.globalEnv['_NINJA_CCACHE_VERSION'] >= [3, 4, 1]:
                 # This needs the fix for https://github.com/ccache/ccache/issues/185 to work.
                 env_flags += [ 'CCACHE_NOCPP2=1' ]
                 compile_flags += [ '-frewrite-includes' ]
             else:
                 env_flags += [ 'ICECC_CLANG_REMOTE_CPP=1' ]
-
+        elif self.globalEnv.ToolchainIs('clang'):
+            env_flags += [ 'ICECC_CLANG_REMOTE_CPP=1' ]
             self.builds.append(dict(
                 rule='MAKE_ICECC_ENV',
-                inputs=icecc_create_env,
                 outputs=version_file,
                 implicit=[cc, self.compiler_timestamp_file],
                 variables=dict(
@@ -843,7 +853,7 @@ class NinjaFile(object):
             if 'SHLINK' in self.tool_commands:
                 if 'LINK' not in self.tool_commands:
                     ninja.pool('winlink', GetOption('link-pool-depth'))
-    
+
                 ninja.rule('SHLINK',
                     command = 'cmd /c $PYTHON %s $out.rsp && $SHLINK @$out.rsp'%split_lines_script,
                     rspfile = '$out.rsp',
@@ -1011,7 +1021,7 @@ def configure(conf, env):
                     Exit(1)
 
         if GetOption('icecream'):
-            if not env.TargetOSIs('linux'):
+            if not env.TargetOSIs('linux', 'darwin'):
                 print 'ERROR: icecream is currently only supported on linux'
                 Exit(1)
             if not env['_NINJA_CCACHE']:
