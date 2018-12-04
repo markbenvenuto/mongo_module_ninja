@@ -23,7 +23,7 @@ PLIST_FILE_TEMPLATE = """
     <key>ProgramArguments</key>
     <array>
     <string>/usr/local/Cellar/icecream/${ICE_VERSION}/sbin/iceccd</string>
-    <string></string>
+    <string>--no-remote</string>
     </array>
     <key>RunAtLoad</key>
     <true/>
