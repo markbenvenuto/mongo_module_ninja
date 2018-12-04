@@ -62,7 +62,13 @@ def setup_icecream():
 
     # Step 3 - Find the version
     icecc_js = json.loads(icecream_js)
+
+    # Step 3.1 - Try grabbing linked_key first. 
+    # If icecream is not linked, it comes back as "null" from brew, without the quotes
     icecream_version =  icecc_js[0]["linked_keg"]
+
+    if not icecream_version:
+        exit_with_error("The homebrew version of icecream is not linked, run 'brew link icecream'")
 
     # Step 4 - Install plist file
     # Use ~/.local/share/icecream for log files
@@ -90,8 +96,8 @@ def setup_icecream():
 
     subprocess.check_call(['launchctl', 'load', '-w', plist_path])
     
-    print_ok("Icecream setup with launchctl. Happy Building!")
-    print("Icecream will now be run as the current user on login.")
+    print_ok("Icecream setup with launchctl complete. Happy Building!")
+    print("\nIcecream will now be run as the current user on login.")
     print("To stop, run launchctl stop com.mongodb.iceccd")
     print("To disable, run launchctl unload -w %s" % (plist_path))
     return
