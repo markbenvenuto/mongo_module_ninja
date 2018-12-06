@@ -122,6 +122,7 @@ class NinjaFile(object):
         if env.get('_NINJA_CCACHE'):
             self.set_up_ccache()
         if env.get('_NINJA_ICECC'):
+            self.add_icecream_check()
             self.set_up_icecc()
 
         if GetOption('pch'):
@@ -298,6 +299,34 @@ class NinjaFile(object):
         for build in self.builds:
             if build['rule'] in ('LINK', 'SHLINK', 'AR'):
                 build.setdefault('order_only', []).append(timestamp_file)
+
+    def add_icecream_check(self):
+        # Run the verification script now to warn the user if icecream is running
+        subprocess.check_call([sys.executable, "src/mongo/db/modules/ninja/darwin/verify_icecream.py"])
+
+        timestamp_file = os.path.join('build', 'compiler_timestamps', 'icecream_check.timestamp')
+        command = self.make_command(
+                '$PYTHON src/mongo/db/modules/ninja/darwin/verify_icecream.py \n ( echo "" > {} )'.format(
+                    timestamp_file))
+        self.builds.append(dict(
+            rule='EXEC',
+            implicit=self.ninja_file,
+            outputs=timestamp_file,
+            variables=dict(
+                command=command,
+                description='Checking for a proper icecream setup',
+                deps='msvc',
+                msvc_deps_prefix='scanning file: ',
+                )))
+
+        # Make this an order_only input to linking stages. This ensures that it happens on every
+        # build but is still allowed to happen in parallel with compilation. This should get it out
+        # of the critical path so that it doesn't actually affect build times, with the downside
+        # that it detects errors later.
+        for build in self.builds:
+            if build['rule'] in ('LINK', 'SHLINK', 'AR'):
+                build.setdefault('order_only', []).append(timestamp_file)
+
 
     def set_up_ccache(self):
         for rule in ('CC', 'CXX', 'SHCC', 'SHCXX'):
