@@ -69,7 +69,7 @@ in System Preferences.""")
     # Step 2 - Check for iceccd
     processes_list = subprocess.check_output(["ps", "-axco", "pid,comm"])
 
-    if "iceccd" in processes_list:
+    if not "iceccd" in processes_list:
         exit_with_warning("iceccd is not run. Please run src/mongo/db/modules/ninja/setup_icecream.py to run it.")
 
     # Step 3 - Check for magic tarball
