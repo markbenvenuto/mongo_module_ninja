@@ -350,7 +350,7 @@ class NinjaFile(object):
         compile_flags = []
 
         if self.globalEnv.TargetOSIs("darwin") or True:
-            version_file = 'build/a91375a9328f2a515182caf1be3e2f2c.tar.gz'
+            version_file = 'build/068d6674432389b2ebd816aaa622d614.tar.gz'
             if not os.path.exists(version_file):
                 print "*** ERROR: Missing clang toolchain tarball at '%s'." % (version_file)
                 print "*** ccache is used automatically if it is installed."
