@@ -352,8 +352,8 @@ class NinjaFile(object):
         if self.globalEnv.TargetOSIs("darwin") or True:
             version_file = 'build/068d6674432389b2ebd816aaa622d614.tar.gz'
             if not os.path.exists(version_file):
-                print "*** ERROR: Missing clang toolchain tarball at '%s'." % (version_file)
-                print "*** ccache is used automatically if it is installed."
+                print("*** ERROR: Missing clang toolchain tarball at '%s'." % (version_file))
+                print("*** ccache is used automatically if it is installed.")
                 Exit(1)
 
             env_flags = [
@@ -1220,7 +1220,7 @@ def configure(conf, env):
                 print('*** ERROR: icecream is not supported with pch')
                 Exit(1)
             if not env.TargetOSIs('linux', 'darwin'):
-                print 'ERROR: icecream is currently only supported on linux'
+                print('ERROR: icecream is currently only supported on linux')
                 Exit(1)
             if not env['_NINJA_CCACHE']:
                 print('*** ERROR: icecream currently requires ccache')

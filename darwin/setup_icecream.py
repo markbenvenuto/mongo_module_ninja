@@ -1,4 +1,4 @@
-#! /usr/bin/env python2
+#! /usr/bin/env python3
 """
 Check for icecream is installed
 1. Check for homebrew
@@ -56,7 +56,7 @@ def setup_icecream():
 
     # Step 2 - check version of icecream
     try:
-        icecream_js = subprocess.check_output([brew_cmd, "info", "--json=v1", "icecream"])
+        icecream_js = subprocess.check_output([brew_cmd, "info", "--json=v1", "icecream"]).decode('utf-8')
     except subprocess.CalledProcessError:
         exit_with_error("icecream is not installed, please install icecream with 'brew install icecream'")
 
@@ -90,7 +90,7 @@ def setup_icecream():
 
     # This will not fail when it does not exist but we hide the output to avoid confusing the user
     try:
-        subprocess.check_output(['launchctl', 'unload', '-w', plist_path], stderr=subprocess.STDOUT)
+        subprocess.check_output(['launchctl', 'unload', '-w', plist_path], stderr=subprocess.STDOUT).decode('utf-8')
     except subprocess.CalledProcessError:
         exit_with_error("Launchctl failed. Run launchctl unload -w %s to investigate" % (plist_path))
 
