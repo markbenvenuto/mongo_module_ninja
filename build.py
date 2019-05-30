@@ -15,6 +15,7 @@ import fnmatch
 import requests
 import subprocess
 import multiprocessing
+import hashlib
 from buildscripts import errorcodes
 
 
@@ -305,7 +306,9 @@ class NinjaFile(object):
         # to the time is was build rather than the time it was installed, so just depending on the
         # compiler itself doesn't actually work.
         cxx = self.globalEnv.WhereIs('$CXX')
-        cxx_escaped = cxx.replace('/', '_').replace('\\', '_').replace(':', '_')
+        # On Windows, the location of the compiler is typically very long and may hit MAX_PATH
+        # so we hash the name.
+        cxx_escaped = hashlib.sha1(cxx).hexdigest()
         now_file = os.path.join('build', 'compiler_timestamps', cxx_escaped + '.last_update')
         then_file = os.path.join('build', 'compiler_timestamps', cxx_escaped + '.mtime')
         self.compiler_timestamp_file = now_file
